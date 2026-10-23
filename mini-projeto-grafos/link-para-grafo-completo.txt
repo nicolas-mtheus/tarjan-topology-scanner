@@ -1,0 +1,8 @@
+Base de dados completa (tech-WHOIS):
+https://networkrepository.com/tech-WHOIS.php
+
+Link de download direto do arquivo MTX:
+https://nrvis.com/download/data/tech/tech-WHOIS.zip
+
+Referencia academica do dataset:
+Ryan A. Rossi and Nesreen K. Ahmed. The Network Data Repository with Interactive Graph Analytics and Visualization. AAAI, 2015.

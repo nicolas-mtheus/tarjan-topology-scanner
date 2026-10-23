@@ -1,0 +1,33 @@
+# Compilação C++ e Arquivos Objeto
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+spof_audit
+mini-projeto-grafos/spof_audit
+
+# Arquivos compactados e submissões
+*.zip
+*.tar
+*.gz
+*.7z
+
+# Diretório de build temporário do LaTeX
+build_relatorio/
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.toc
+
+# Arquivos de sistema e editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~

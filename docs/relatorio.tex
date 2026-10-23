@@ -1,0 +1,263 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1.4cm,top=1.3cm,bottom=1.4cm]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{multicol}
+\usepackage{caption}
+
+% Espaçamentos compactos
+\setlength{\columnsep}{0.6cm}
+\titleformat{\section}{\normalsize\bfseries}{\thesection.}{0.4em}{}
+\titleformat{\subsection}{\small\bfseries}{\thesubsection.}{0.3em}{}
+\titlespacing*{\section}{0pt}{4pt}{2pt}
+\titlespacing*{\subsection}{0pt}{3pt}{1pt}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize GCC262 -- Grafos e suas Aplicações (UFLA)}
+\fancyhead[R]{\footnotesize Mini-Projeto: Auditoria de SPOFs em Redes}
+\fancyfoot[C]{\footnotesize Página \thepage\ de 3}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\lstset{
+    basicstyle=\ttfamily\scriptsize,
+    backgroundcolor=\color{gray!8},
+    frame=single,
+    rulecolor=\color{gray!35},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=4pt,
+    tabsize=2,
+    breaklines=true,
+    keywordstyle=\bfseries\color{blue!80!black},
+    commentstyle=\itshape\color{green!50!black},
+    morekeywords={procedimento, retorne, para, cada, se, senao, entao}
+}
+
+\begin{document}
+
+% Cabeçalho Formal Exigido pela Especificação
+\begin{center}
+    {\large \textbf{Auditoria de Resiliência e Mapeamento de Pontos Únicos de Falha (SPOFs) em Topologias de Redes Autônomas com Algoritmo de Tarjan}}\\[0.15cm]
+    \footnotesize
+    \textbf{Estudante:} Nicolas Matheus Lima Oliveira \quad $\vert$ \quad \textbf{Matrícula:} 202420588\\
+    \textbf{Disciplina:} GCC262 -- Grafos e suas aplicações \quad $\vert$ \quad \textbf{Código:} GCC262\\
+    \textbf{Professor:} Prof. Vinícius Dias (\texttt{viniciusdias@ufla.br})\\
+    \textit{Departamento de Ciência da Computação -- Universidade Federal de Lavras (UFLA)}\\[0.1cm]
+    \rule{\textwidth}{0.6pt}
+\end{center}
+\vspace{-0.3cm}
+
+\begin{multicols}{2}
+
+\section{Definição e Apresentação da Base}
+A infraestrutura global da Internet fundamenta-se na interconexão de Sistemas Autônomos (AS -- \textit{Autonomous Systems}), operados por provedores de conectividade, corporações e órgãos governamentais. A base de dados selecionada para este projeto é a \textbf{tech-WHOIS}, disponibilizada publicamente pelo repositório científico \textit{Network Repository} \cite{rossi2015network}.
+
+\subsection{Modelagem do Grafo}
+\begin{itemize}
+    \setlength{\itemsep}{0pt}
+    \item \textbf{Vértices ($V$):} Representam entidades autônomas e roteadores de borda catalogados nos registros do protocolo WHOIS.
+    \item \textbf{Arestas ($E$):} Representam acordos de trânsito e enlaces de comunicação (\textit{peering}) entre essas entidades.
+    \item \textbf{Propriedades Estruturais:} Grafo não-direcionado, simples (sem laços ou arestas múltiplas redundantes), não ponderado.
+\end{itemize}
+
+\subsection{Caracterização Quantitativa}
+A análise quantitativa da base completa revela:
+\begin{itemize}
+    \setlength{\itemsep}{0pt}
+    \item Número de Vértices: $|V| = 7.476$ ativos.
+    \item Número de Arestas: $|E| = 56.943$ enlaces de interconexão.
+    \item Grau Médio dos Vértices: $\bar{d} = \frac{2|E|}{|V|} \approx 15{,}23$.
+    \item Conectividade Global: A rede forma um único componente conexo gigante abrangendo 100\% dos vértices.
+\end{itemize}
+A distribuição de graus segue uma lei de potência (topologia \textit{scale-free}), onde a vasta maioria dos nós possui poucas conexões, enquanto alguns poucos \textit{hubs} concentram conectividade massiva (Figura \ref{fig:analise}).
+
+\section{Escopo e Definição do Problema}
+\subsection{Problema em Aberto}
+Em engenharia de redes e cibersegurança, a integridade operacional de uma topologia depende da eliminação de \textbf{Single Points of Failure (SPOFs)}. Um SPOF é um elemento singular cuja inoperância acarreta o particionamento da rede em componentes desconexos.
+\begin{itemize}
+    \setlength{\itemsep}{0pt}
+    \item \textbf{Pontos de Articulação (\textit{Cut Vertices}):} Ativos que, ao sofrerem ataques direcionados (ex: DDoS, invasão lógica) ou falhas de hardware, fragmentam a rede.
+    \item \textbf{Pontes (\textit{Cut Edges}):} Enlaces de fibra/rádio cuja interrupção física isola subsistemas inteiros.
+\end{itemize}
+
+\subsection{Especificação Formal de Entrada e Saída}
+\textbf{Entrada:} Arquivo texto contendo a lista de conexões (suporta formato Matrix Market \texttt{.mtx} e pares de adjacência \texttt{u v}).\\
+\textbf{Saída:} Relatório determinístico de auditoria contendo métricas da topologia, total e porcentagem de vértices de articulação, total e porcentagem de pontes, e o \textit{ranking} dos nós críticos de maior impacto.
+
+\section{Originalidade da Proposta}
+Diferente de abordagens triviais de caminhos mínimos, este trabalho aplica a teoria de grafos sob a ótica de \textbf{Segurança Defensiva e Resiliência Estrutural}. O sistema calcula não apenas a identificação booleana de cortes, mas quantifica o \textit{fator de vulnerabilidade de tráfego}, correlacionando os nós de articulação com o seu grau de conectividade para identificar alvos prioritários de mitigação e redundância de enlaces.
+
+\section{Solução Usando Algoritmos}
+\subsection{Algoritmo de Tarjan baseado em DFS}
+A busca ingênua por vértices de articulação removeria cada vértice $v \in V$ e executaria uma BFS/DFS para testar conectividade, resultando em complexidade $O(V \cdot (V + E))$, inviável para redes em larga escala.
+
+Adotou-se o \textbf{Algoritmo de Tarjan} baseado em Busca em Profundidade (\textit{Depth-First Search} -- DFS). O algoritmo realiza uma única passagem sobre a topologia mantendo dois rótulos temporais para cada vértice $u$:
+\begin{enumerate}
+    \setlength{\itemsep}{0pt}
+    \item $tin[u]$: Tempo de descoberta (\textit{discovery time}) no percurso da árvore de busca em profundidade.
+    \item $low[u]$: Menor tempo de descoberta alcançável a partir da subárvore enraizada em $u$, utilizando no máximo uma aresta de retorno (\textit{back-edge}).
+\end{enumerate}
+
+\subsection{Critérios de Identificação de SPOFs}
+Durante o retrocesso da chamada recursiva da aresta $(u, v)$:
+\begin{itemize}
+    \setlength{\itemsep}{0pt}
+    \item \textbf{Ponte:} Uma aresta $(u, v)$ é ponte se e somente se:
+    \begin{equation}
+        low[v] > tin[u]
+    \end{equation}
+    \item \textbf{Ponto de Articulação:}
+    \begin{enumerate}
+        \item Se $u$ for a \textbf{raiz} da DFS: $u$ é articulação se e somente se tiver $\ge 2$ filhos na árvore de busca.
+        \item Se $u$ \textbf{não for raiz}: $u$ é articulação se possuir ao menos um filho $v$ tal que:
+        \begin{equation}
+            low[v] \ge tin[u]
+        \end{equation}
+    \end{enumerate}
+\end{itemize}
+
+\subsection{Pseudocódigo da Solução}
+\begin{lstlisting}[language=C]
+procedimento AuditarSPOF(G = (V, E)):
+    timer = 0
+    para cada u em V faca: tin[u] = low[u] = 0
+    Articulacoes = [], Pontes = []
+    para cada u em V faca:
+        se tin[u] == 0 entao:
+            DFS(u, -1, G)
+    retorne Articulacoes, Pontes
+
+procedimento DFS(u, pai, G):
+    timer = timer + 1
+    tin[u] = low[u] = timer
+    filhos = 0
+    para cada v em Adj[u] faca:
+        se v == pai entao continua
+        se tin[v] != 0 entao: // Back-edge
+            low[u] = min(low[u], tin[v])
+        senao:               // Tree-edge
+            filhos = filhos + 1
+            DFS(v, u, G)
+            low[u] = min(low[u], low[v])
+            se low[v] >= tin[u] e pai != -1 entao:
+                Articulacoes.inserir(u)
+            se low[v] > tin[u] entao:
+                Pontes.inserir((u, v))
+    se pai == -1 e filhos > 1 entao:
+        Articulacoes.inserir(u)
+\end{lstlisting}
+
+\subsection{Complexidade Assintótica}
+\begin{itemize}
+    \setlength{\itemsep}{0pt}
+    \item \textbf{Tempo:} Cada vértice e aresta são visitados em número constante de operações. A ordenação dos hubs leva $O(|Artic| \log |Artic|)$. Tempo total: estritamente \textbf{$O(V + E)$}.
+    \item \textbf{Espaço:} Vetores de controle e pilha DFS consomem \textbf{$O(V + E)$}.
+\end{itemize}
+
+\begin{center}
+    \includegraphics[width=\linewidth]{fig1_topologia_spof.png}
+    \captionof{figure}{Mapeamento topológico dos SPOFs sobre a amostra (\texttt{amostra-grafo.txt}). Vértices de articulação destacados em vermelho e enlaces-ponte em linhas tracejadas.}
+    \label{fig:amostra}
+\end{center}
+
+\section{Ferramenta e Software Desenvolvido}
+O software foi implementado em \textbf{C++17}, utilizando estritamente a biblioteca padrão (\textit{Standard Template Library} -- STL), sem dependência de bibliotecas externas, garantindo total portabilidade em ambientes Linux/POSIX.
+
+\subsection{Arquitetura Modular}
+O código foi estruturado em quatro módulos no diretório \texttt{src/}:
+\begin{itemize}
+    \setlength{\itemsep}{0pt}
+    \item \texttt{Graph.hpp / Graph.cpp}: Lista de adjacência dinâmica (\texttt{vector<vector<int>>}) com mapeamento transparente de IDs.
+    \item \texttt{Parser.hpp / Parser.cpp}: Leitor robusto que processa formatos Matrix Market e listas de arestas arbitrárias.
+    \item \texttt{TarjanSPOF.hpp / TarjanSPOF.cpp}: Algoritmo de auditoria com \textbf{todas as variáveis encapsuladas} como membros de instância, eliminando variáveis globais.
+    \item \texttt{main.cpp}: Interface CLI que recebe o caminho do arquivo via parâmetro do \texttt{make run}, sem requisição de entrada interativa pelo terminal.
+\end{itemize}
+
+\subsection{Conformidade e Qualidade de Código}
+O código adota: indentação consistente de 4 espaços, funções concisas com escopo único, documentação no formato Doxygen, nomes mnemônicos e \textbf{limite estrito de 80 colunas por linha}.
+
+\subsection{Instruções de Compilação e Uso}
+\begin{itemize}
+    \setlength{\itemsep}{0pt}
+    \item \textbf{Compilação:} \texttt{\$ make} (aplica \texttt{-O3 -Wall -Wextra -std=c++17}).
+    \item \textbf{Execução sobre Amostra:} \texttt{\$ make run GRAFO=amostra-grafo.txt}
+    \item \textbf{Execução sobre Base Completa:} \texttt{\$ make run GRAFO=tech-WHOIS.mtx}
+    \item \textbf{Limpeza de Artefatos:} \texttt{\$ make clean} (remove binários e arquivos \texttt{.o}).
+\end{itemize}
+
+\begin{center}
+    \includegraphics[width=\linewidth]{fig2_analise_redes.png}
+    \captionof{figure}{Distribuição de conectividade $P(k)$ em escala log-log evidenciando comportamento \textit{scale-free} (esquerda) e ranking dos nós críticos de maior grau de impacto (direita).}
+    \label{fig:analise}
+\end{center}
+
+\section{Resultados e Discussão}
+O sistema foi executado sobre a amostra reduzida (\texttt{amostra-grafo.txt}, de 192 bytes) e a base completa (\texttt{tech-WHOIS.mtx}). Os resultados quantitativos obtidos são sintetizados na Tabela \ref{tab:resultados}.
+
+\begin{center}
+\small
+\captionof{table}{Métricas estruturais e de vulnerabilidade obtidas.}
+\label{tab:resultados}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Métrica de Auditoria} & \textbf{Amostra} & \textbf{Base Completa} \\
+\midrule
+Vértices Totais ($|V|$) & 16 & 7.476 \\
+Arestas Totais ($|E|$) & 27 & 56.943 \\
+Grau Médio ($\bar{d}$) & 3,38 & 15,23 \\
+Componentes Conexos & 1 & 1 \\
+Pontos de Articulação & 5 (31,25\%) & 253 (3,38\%) \\
+Pontes (Enlaces) & 7 (25,93\%) & 437 (0,77\%) \\
+Tempo de Execução & $<$ 0,01 ms & 0,54 ms \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Interpretação e Análise Crítica}
+Na base completa \textbf{tech-WHOIS}, embora a densidade média de enlaces pareça segura ($\bar{d} \approx 15{,}23$), a topologia exibe extrema fragilidade concentrada em pontos específicos:
+\begin{enumerate}
+    \setlength{\itemsep}{0pt}
+    \item \textbf{Vulnerabilidade Estrutural Oculta:} Foram mapeados \textbf{253 nós de articulação} (3,38\% da rede) e \textbf{437 enlaces-ponte} (0,77\%). Isso prova que falhas nesses elementos causam desconexão imediata de sub-redes.
+    \item \textbf{Concentração de Risco nos Hubs Centrais:} O \textit{Vértice 22} possui grau 1.079 (conectado diretamente a mais de 14,4\% de toda a topologia) e é classificado como Ponto de Articulação. Uma indisponibilidade no Vértice 22 particiona a rede e isola dezenas de sistemas autônomos periféricos. Outros hubs com alto potencial de dano incluem os vértices 974 (grau 817), 269 (grau 611) e 456 (grau 569).
+    \item \textbf{Eficiência Temporal do Algoritmo:} O processamento de 7.476 vértices e 56.943 enlaces demandou apenas \textbf{0,54 ms} no Linux, comprovando experimentalmente a linearidade assintótica $O(V + E)$ em C++.
+\end{enumerate}
+
+\section{Limitações do Trabalho}
+A despeito da precisão do mapeamento de SPOFs, o estudo apresenta as seguintes limitações inerentes ao escopo:
+\begin{enumerate}
+    \setlength{\itemsep}{0pt}
+    \item \textbf{Natureza Estática da Topologia:} O grafo representa um instantâneo temporal. Redes de AS e roteamento BGP reconfiguram rotas dinamicamente através de anúncios de caminhos alternativos.
+    \item \textbf{Ausência de Ponderação e QoS:} O modelo não considera capacidade de banda, latência ou custo financeiro dos enlaces; uma rota de contingência pode existir teoricamente, mas não suportar o volume de tráfego desviado.
+    \item \textbf{Resiliência de Ordem Superior:} O algoritmo de Tarjan mapeia falhas simples (1-corte). Não contempla cenários onde a falha simultânea de dois nós redundantes (2-corte ou $k$-conectividade) cause colapso da rede.
+\end{enumerate}
+
+\begin{thebibliography}{9}
+\bibitem{rossi2015network}
+R.~A. Rossi and N.~K. Ahmed.
+\newblock The Network Data Repository with Interactive Graph Analytics and Visualization.
+\newblock In \emph{AAAI Conference on Artificial Intelligence}, 2015.
+\url{https://networkrepository.com/tech-WHOIS.php}.
+\end{thebibliography}
+
+\end{multicols}
+
+\end{document}
