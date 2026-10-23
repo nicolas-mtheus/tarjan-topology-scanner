@@ -159,5 +159,4 @@ O relatório formal deste trabalho, contendo a fundamentação matemática, pseu
 * **Nicolas Matheus Lima Oliveira** (Matrícula: `202420588`)
 * Curso: Ciência da Computação / Engenharia — **Universidade Federal de Lavras (UFLA)**
 * Disciplina: **GCC262 - Grafos e suas Aplicações**
-* Docente: **Prof. Vinícius Dias** (`viniciusdias@ufla.br`)
 * GitHub: [@nicolas-mtheus](https://github.com/nicolas-mtheus)
